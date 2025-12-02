@@ -109,6 +109,10 @@
 6. `nav_rviz`:
    - `True` - 可视化 navigation2
 
+7. `planner_type`:
+   - `teb` - 使用 TEB (Timed Elastic Band) 局部规划器
+   - `intpc` - 使用 IntPC (Integrated Planning and Control) 局部规划器
+
 ### 3.2 仿真模式示例
 
 - 边建图边导航
@@ -118,6 +122,7 @@
     world:=RMUL \
     mode:=mapping \
     lio:=fastlio \
+    planner_type:=teb \
     lio_rviz:=False \
     nav_rviz:=True
     ```
@@ -130,6 +135,7 @@
     mode:=nav \
     lio:=fastlio \
     localization:=slam_toolbox \
+    planner_type:=teb \
     lio_rviz:=False \
     nav_rviz:=True
     ```
@@ -143,6 +149,7 @@
     world:=YOUR_WORLD_NAME \
     mode:=mapping  \
     lio:=fastlio \
+    planner_type:=teb \
     lio_rviz:=False \
     nav_rviz:=True
     ```
@@ -160,6 +167,7 @@
     mode:=nav \
     lio:=fastlio \
     localization:=slam_toolbox \
+    planner_type:=teb \
     lio_rviz:=False \
     nav_rviz:=True
     ```

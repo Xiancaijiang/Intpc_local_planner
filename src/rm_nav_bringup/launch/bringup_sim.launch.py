@@ -21,6 +21,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_lio_rviz = LaunchConfiguration('lio_rviz')
     use_nav_rviz = LaunchConfiguration('nav_rviz')
+    planner_type = LaunchConfiguration('planner_type')
 
     ################################ robot_description parameters start ###############################
     launch_params = yaml.safe_load(open(os.path.join(
@@ -99,6 +100,11 @@ def generate_launch_description():
         'lio',
         default_value='fast_lio',
         description='Choose lio alogrithm: fastlio or pointlio')
+        
+    declare_planner_type_cmd = DeclareLaunchArgument(
+        'planner_type',
+        default_value='teb',
+        description='Choose local planner: teb or intpc')
 
     # Specify the actions
     start_rm_simulation = IncludeLaunchDescription(
@@ -304,7 +310,8 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
             'map': nav2_map_dir,
             'params_file': nav2_params_file_dir,
-            'nav_rviz': use_nav_rviz}.items()
+            'nav_rviz': use_nav_rviz,
+            'planner_type': planner_type}.items()
     )
 
     ld = LaunchDescription()
@@ -317,6 +324,7 @@ def generate_launch_description():
     ld.add_action(declare_mode_cmd)
     ld.add_action(declare_localization_cmd)
     ld.add_action(declare_LIO_cmd)
+    ld.add_action(declare_planner_type_cmd)
 
     ld.add_action(start_rm_simulation)
     ld.add_action(bringup_imu_complementary_filter_node)
