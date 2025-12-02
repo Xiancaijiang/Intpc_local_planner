@@ -1,37 +1,8 @@
-# PB_RM_Simulation
-
-深圳北理莫斯科大学 北极熊战队 哨兵导航仿真/实车包
+# Intpc_local_planner
 
 ## 一. 项目介绍
 
-本项目使用全向移动小车，附加 Livox Mid360 雷达与 IMU，在 RMUC/RMUL 地图进行导航算法仿真，仅需要调整参数即可移植到真实机器人中导航。
-
-早期功能演示视频：[寒假在家，怎么调车！？更适合新手宝宝的 RM 导航仿真](https://b23.tv/xSNQGmb)
-
-|Gazebo 仿真|Fast_LIO/Point_LIO + Navigation2|
-|:-:|:-:|
-|![Gazebo 仿真](.docs/gazebo_RMUL.png)|![Fast_LIO/Point_LIO + Navigation2](.docs/FAST_LIO+Nav2.png)|
-
-|动态避障|
-|:-:|
-|![Gazebo 仿真](.docs/2024.5.11RMUL动态避障2.gif)|
-
-|一键偷家|
-|:-:|
-|![Gazebo 仿真](.docs/2024.5.11RMUC轨迹跟踪一键偷家.gif)|
-
-### 1.1 rm_simulation 话题接口
-
-| **Topic name**      | **Type**                        | **Note**                         |
-|:-------------------:|:-------------------------------:|:--------------------------------:|
-| /livox/lidar             | livox_ros_driver2/msg/CustomMsg | Mid360 自定义消息类型   |
-| /livox/lidar/pointcloud | sensor_msgs/msg/PointCloud2     | ROS2 点云消息类型                      |
-| /livox/imu                | sensor_msgs/msg/Imu             | Gazebo 插件仿真 IMU                  |
-| /cmd_vel            | geometry_msgs/msg/Twist         | 麦克纳姆轮小车运动控制接口                  |
-
-### 1.2 整体框图
-
-![功能包流程图](.docs/功能包流程图.png)
+本项目是一个基于ROS2 Nav2框架的导航包，支持多种局部规划器的集成与切换。用户可以轻松添加新的局部规划器算法，并通过参数配置实现无缝切换。
 
 ## 二. 环境配置
 
@@ -40,7 +11,7 @@
 1. 克隆仓库
 
     ```sh
-    git clone --recursive https://github.com/LihanChen2004/PB_RMSimulation.git
+    git clone --recursive https://github.com/Xiancaijiang/Intpc_local_planner.git
     ```
 
 2. 安装 [Livox SDK2](https://github.com/Livox-SDK/Livox-SDK2)
@@ -61,7 +32,7 @@
 3. 安装依赖
 
     ```sh
-    cd pb_rmsimulation
+    cd Intpc_local_planner
 
     rosdep install -r --from-paths src --ignore-src --rosdistro $ROS_DISTRO -y
     ```
@@ -172,15 +143,126 @@
     nav_rviz:=True
     ```
 
-    Tips: 栅格地图文件和 pcd 文件需具为相同名称，分别存放在 `src/rm_nav_bringup/map` 和 `src/rm_nav_bringup/PCD` 中，启动导航时 world 指定为文件名前缀即可。
-
 ### 3.4 小工具 - 键盘控制
 
 ```sh
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
-## 四. 实车适配关键参数
+## 四. 如何加入新的 Local Planner
+
+本导航包支持轻松集成新的局部规划器算法。以下是添加新局部规划器的详细步骤：
+
+### 4.1 1. 准备规划器代码
+
+将你的局部规划器代码添加到 `src/rm_navigation/` 目录下，确保它符合 Nav2 局部规划器的接口要求。
+
+### 4.2 2. 创建配置文件
+
+在 `src/rm_navigation/rm_navigation/config/` 目录下创建新的配置文件，命名为 `nav2_params_<planner_name>.yaml`。该文件应包含新规划器的所有配置参数。
+
+示例配置文件结构：
+
+```yaml
+planner_server:
+  ros__parameters:
+    planner_plugin_types:
+      - nav2_navfn_planner/NavfnPlanner
+      - nav2_smac_planner/SmacPlannerLattice
+    planner_plugins:
+      - GridBased
+      - SmacPlanner
+    # GridBased 配置
+    GridBased:
+      plugin: nav2_navfn_planner/NavfnPlanner
+      tolerance: 0.5
+      use_astar: false
+      allow_unknown: true
+    # SmacPlanner 配置
+    SmacPlanner:
+      plugin: nav2_smac_planner/SmacPlannerLattice
+      tolerance: 0.5
+      downsample_costmap: true
+      downsampling_factor: 1
+
+controller_server:
+  ros__parameters:
+    controller_plugins:
+      - FollowPath
+    # 新规划器的控制器配置
+    FollowPath:
+      plugin: <your_planner_package>/<your_planner_class>
+      # 其他规划器特定参数
+      param1: value1
+      param2: value2
+```
+
+### 4.3 3. 修改 Launch 文件
+
+需要修改 `src/rm_navigation/rm_navigation/launch/navigation_launch.py` 文件，以支持新的规划器：
+
+1. 在文件开头的参数声明部分，为新规划器添加一个选项：
+
+```python
+declare_planner_type_cmd = DeclareLaunchArgument(
+    'planner_type',
+    default_value='teb',
+    description='Choose local planner: teb, intpc or <your_planner_name>')
+```
+
+2. 在配置文件选择部分，添加新规划器的条件判断：
+
+```python
+if planner_type == 'teb':
+    params_file = os.path.join(
+        get_package_share_directory('rm_navigation'),
+        'config',
+        'nav2_params_teb.yaml')
+elif planner_type == 'intpc':
+    params_file = os.path.join(
+        get_package_share_directory('rm_navigation'),
+        'config',
+        'nav2_params_intpc.yaml')
+elif planner_type == '<your_planner_name>':
+    params_file = os.path.join(
+        get_package_share_directory('rm_navigation'),
+        'config',
+        'nav2_params_<your_planner_name>.yaml')
+else:
+    # 默认使用 teb 规划器
+    params_file = os.path.join(
+        get_package_share_directory('rm_navigation'),
+        'config',
+        'nav2_params_teb.yaml')
+```
+
+### 4.4 4. 更新 README
+
+在 README.md 文件的可选参数部分，为 `planner_type` 添加新的选项说明：
+
+```markdown
+7. `planner_type`:
+   - `teb` - 使用 TEB (Timed Elastic Band) 局部规划器
+   - `intpc` - 使用 IntPC (Integrated Planning and Control) 局部规划器
+   - `<your_planner_name>` - 使用 <your_planner_description> 局部规划器
+```
+
+### 4.5 5. 编译和测试
+
+编译项目并使用新的规划器进行测试：
+
+```sh
+colcon build --symlink-install
+ros2 launch rm_nav_bringup bringup_sim.launch.py \
+world:=RMUL \
+mode:=mapping \
+lio:=fastlio \
+planner_type:=<your_planner_name> \
+lio_rviz:=False \
+nav_rviz:=True
+```
+
+## 五. 实车适配关键参数
 
 1. 雷达 ip
 
@@ -204,30 +286,31 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 
     参数很多，比较重要的是 robot_radius 和 速度相关参数。详见 [nav2官方文档](https://docs.nav2.org/)
 
-## 后记
+## 六. 项目结构
 
-> 这个仿真包也是我学习的一个记录，也是我学习的一个起点。
+```
+├── src/
+│   ├── rm_driver/
+│   ├── rm_localization/
+│   ├── rm_nav_bringup/
+│   ├── rm_navigation/
+│   │   ├── Intpc_local_planner/
+│   │   ├── costmap_converter/
+│   │   ├── fake_vel_transform/
+│   │   ├── rm_navigation/
+│   │   │   ├── config/
+│   │   │   │   ├── nav2_params_teb.yaml
+│   │   │   │   └── nav2_params_intpc.yaml
+│   │   │   └── launch/
+│   │   │       └── navigation_launch.py
+│   │   └── teb_local_planner/
+│   ├── rm_perception/
+│   └── rm_simulation/
+├── README.md
+└── README_old.md
+```
 
-很难想象一年前的五月，我连 Ubuntu 和 ROS 是都不知道。笔者大一时只是个混子，北极熊第一届视觉组成员（其实啥也没干），但误打误撞去了 2023 联盟赛广东站赛场。当时只是作为一个观众+摄影师，但赛场的氛围是无以言表的，回来后 RM 浓度就开始逐渐增高，尝试部署华师2023的视觉开源，也在这段时间逐渐学会了自学的方式，写下了第一篇 [算法组文档](https://flowus.cn/lihanchen/facb28a9-5d34-42a7-9bc8-630a182c3571) 。
-
-暑假时参加了“快递速达”的支线任务（比赛），那是第一次初识导航，还记得举着电脑拿着2D雷达在实验楼建图的喜悦。后来被春茧里华农的“自动驾驶”哨兵震撼到了，于是乎大二上和“实验楼安家组”出去喝粥路上，队长问我 24 赛季你想做啥，我毫不犹豫的答出了“导航”。
-
-抱着玩一玩练练手的心态创建了本仓库，第一个 [commit](https://gitee.com/SMBU-POLARBEAR/pb_rmsimulation/commit/a3e475ce59c60d68462e4555a76113e4ba1295f1) 在 2023-09-27，当时借鉴的还是 [华农 2023 RMUL 哨兵导航开源包](https://github.com/SCAU-RM-NAV/rm2023_auto_sentry_ws) 和 [湖工大RMUC地图](https://github.com/HBUTHUANGPX/Hbut_LC_sentry)，在此基础上只是加了 mid360 的仿真。后来 2023.10 月 中南大学 FYT 战队开源了[RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry)，是当时少见的 ROS2 nav2 导航框架，于是乎当时就想着缝进初代导航包（直到现在也是中南 FYT 的模样）。在不断尝试新算法的过程中，对 Gazebo 和 ros2_launch 也有了更深入的了解。
-
-如果没有开发这个仿真包，我可能也不会有机会接触到导航算法，也不会有机会接触到这么多优秀的开源项目。我还记得那是 2023.1.26，在港中深的哨兵上部署了我的仿真包（ RMUC 联队），改改 launch 文件居然就能让实车动起来了，意料之外地实现了 Sim2Real。由于学校没有机械专业，哨兵在联盟赛前不到两周才完全出生，于是乎备赛期间一直都是在赛博调车优化。
-
-上赛场了，从观众席到检录区。但当时由于在仿真中忽略了雷达偏心放置时的 tf 问题，导致实车云台旋转时定位不准，最终也没能在 RMUL 中发挥丝滑的导航走位...挺遗憾的。
-
-鄙人非大佬，只是个缝合怪菜鸡。我的学习路径个人觉得是有点畸形的，并不是自下而上地先学理论再实践，而是自上而下地先实践再不断补理论的坑。但这种学习方式也不断地给我正反馈，梦里都在改代码，每天醒来都有盼头。
-
-## 致谢（不分先后）
-
-Mid360 点云仿真：参考了 [livox_laser_simulation](https://github.com/Livox-SDK/livox_laser_simulation/blob/main/src/livox_points_plugin.cpp)、 [livox_laser_simulation_RO2](https://github.com/stm32f303ret6/livox_laser_simulation_RO2/blob/main/src/livox_points_plugin.cpp)、 [Issue15: CustomMsg](https://github.com/Livox-SDK/livox_laser_simulation/issues/15)。
-
-导航算法框架：基于 [中南大学 FYT 战队 RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry) 修改并适配仿真，在原有基础上添加对 base_link 的建模，提供多种可选定位方式并完善 launch 文件。
-
-感谢深技大 Shockley，对雷达跟随云台旋转时的速度变换问题提供了很好的解决思路，从而有了 [fake_vel_transform](./src/rm_navigation/fake_vel_transform/) 功能包。
-
-感谢上海工程技术大学、辽宁科技大学、上海电力大学对本开源包的深度使用与交流，给了我很多优化方向。
-
-还有很多很多很多 RM 网友给了我很多鼓励和帮助，这里就不一一列举了（已达成龙王结局，QQ 里 RM 分组九十多人）。
+## 七. 致谢
+- Mid360 点云仿真：参考了 livox_laser_simulation、 livox_laser_simulation_RO2、 Issue15: CustomMsg。
+- 原Navigation2算法框架基于 [中南大学 FYT 战队 RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry) 深圳北理莫斯科大学 北极熊战队 哨兵导航仿真/实车包(https://github.com/LihanChen2004/PB_RMSimulation.git)修改并适配
+- 感谢所有为开源导航社区做出贡献的开发者们
