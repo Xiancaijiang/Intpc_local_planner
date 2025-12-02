@@ -311,6 +311,7 @@ nav_rviz:=True
 ```
 
 ## 七. 致谢
-- Mid360 点云仿真：参考了 livox_laser_simulation、 livox_laser_simulation_RO2、 Issue15: CustomMsg。
-- 原Navigation2算法框架基于 [中南大学 FYT 战队 RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry) 深圳北理莫斯科大学 北极熊战队 哨兵导航仿真/实车包(https://github.com/LihanChen2004/PB_RMSimulation.git)修改并适配
+- Intpc算法思想来源于北航机器人平台相关工作 
+- Mid360 点云仿真：参考了 livox_laser_simulation、 livox_laser_simulation_RO2、 Issue15: CustomMsg
+- 原Navigation2算法框架基于 [中南大学 FYT 战队 RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry) , 深圳北理莫斯科大学 北极熊战队 哨兵导航仿真/实车包(https://github.com/LihanChen2004/PB_RMSimulation.git) 修改并适配
 - 感谢所有为开源导航社区做出贡献的开发者们
