@@ -10,21 +10,31 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>nav2_common</buildtool_depend>
 
-  <depend>rclcpp</depend>
-  <depend>rclcpp_lifecycle</depend>
-  <depend>nav2_core</depend>
-  <depend>nav2_util</depend>
-  <depend>nav2_costmap_2d</depend>
+  <depend>costmap_converter</depend>
+
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
+  <system_depend>libg2o</system_depend>
+  <depend>dwb_critics</depend>
+  <depend>nav2_core</depend>
+  <depend>nav2_costmap_2d</depend>
+  <depend>nav2_util</depend>
   <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>std_msgs</depend>
+  <depend>teb_msgs</depend>
   <depend>tf2</depend>
-  <depend>tf2_ros</depend>
+  <depend>tf2_eigen</depend>
   <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>nav_2d_utils</depend>
   <depend>visualization_msgs</depend>
-
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <depend>builtin_interfaces</depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  
+  <test_depend>ament_cmake_gtest</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

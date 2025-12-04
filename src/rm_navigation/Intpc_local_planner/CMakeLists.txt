@@ -1,1 +1,116 @@
-cmake_minimum_required(VERSION 3.8)\nproject(intpc_local_planner)\n\n# Default to C++17\nif(NOT CMAKE_CXX_STANDARD)\n  set(CMAKE_CXX_STANDARD 17)\nendif()\n\nif(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")\n  add_compile_options(-Wall -Wextra -Wpedantic)\nendif()\n\n# Find dependencies\nfind_package(ament_cmake REQUIRED)\nfind_package(rclcpp REQUIRED)\nfind_package(rclcpp_lifecycle REQUIRED)\nfind_package(nav2_common REQUIRED)\nfind_package(nav2_core REQUIRED)\nfind_package(nav2_util REQUIRED)\nfind_package(nav2_costmap_2d REQUIRED)\nfind_package(geometry_msgs REQUIRED)\nfind_package(nav_msgs REQUIRED)\nfind_package(pluginlib REQUIRED)\nfind_package(tf2 REQUIRED)\nfind_package(tf2_ros REQUIRED)\nfind_package(tf2_geometry_msgs REQUIRED)\nfind_package(visualization_msgs REQUIRED)\n\nnav2_package()\n\n# Include directories\ninclude_directories(\n  include\n)\n\n# Build the plugin library\nadd_library(${PROJECT_NAME}_plugin SHARED\n  src/intpc_local_planner_ros.cpp\n)\n\n# Link dependencies\naament_target_dependencies(${PROJECT_NAME}_plugin\n  rclcpp\n  rclcpp_lifecycle\n  nav2_core\n  nav2_util\n  nav2_costmap_2d\n  geometry_msgs\n  nav_msgs\n  pluginlib\n  tf2\n  tf2_ros\n  tf2_geometry_msgs\n  visualization_msgs\n)\n\n# Install library\ninstall(TARGETS ${PROJECT_NAME}_plugin\n  ARCHIVE DESTINATION lib\n  LIBRARY DESTINATION lib\n  RUNTIME DESTINATION bin\n)\n\n# Install headers\ninstall(DIRECTORY include/\n  DESTINATION include/\n)\n\n# Install Python scripts\ninstall(DIRECTORY scripts/\n  DESTINATION lib/${PROJECT_NAME}/\n  USE_SOURCE_PERMISSIONS\n)\n\n# Export plugin\npluginlib_export_plugin_description_file(nav2_core intpc_local_planner_plugin.xml)\n\n# Install plugin description file\ninstall(FILES intpc_local_planner_plugin.xml\n  DESTINATION share/${PROJECT_NAME}/\n)\n\n# Test\nif(BUILD_TESTING)\n  find_package(ament_lint_auto REQUIRED)\n  ament_lint_auto_find_test_dependencies()\nendif()\n\nament_package()\n
+cmake_minimum_required(VERSION 3.8)
+project(intpc_local_planner)
+
+# Default to C++17
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# Find dependencies
+find_package(nav2_common REQUIRED)
+find_package(ament_cmake REQUIRED)
+
+# Find g2o (system library)
+find_package(g2o REQUIRED)
+find_package(costmap_converter REQUIRED)
+find_package(dwb_critics REQUIRED)
+find_package(nav_2d_utils REQUIRED)
+find_package(nav2_core REQUIRED)
+find_package(nav2_costmap_2d REQUIRED)
+find_package(nav2_util REQUIRED)
+#find_package(interactive_markers REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(teb_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+
+nav2_package()
+
+# Include directories
+include_directories(
+  include
+  ${g2o_INCLUDE_DIRS}
+)
+
+# Build the plugin library
+add_library(${PROJECT_NAME}_plugin SHARED
+  src/intpc_local_planner_ros.cpp
+)
+
+# Link dependencies
+ament_target_dependencies(${PROJECT_NAME}_plugin
+    costmap_converter
+    dwb_critics
+    nav_2d_utils
+    nav2_core
+    nav2_costmap_2d
+    nav2_util
+    geometry_msgs
+    nav_msgs
+    rclcpp
+    rclcpp_action
+    rclcpp_lifecycle
+    std_msgs
+    pluginlib
+    teb_msgs
+    tf2
+    tf2_eigen
+    tf2_geometry_msgs
+    tf2_ros
+    visualization_msgs
+    builtin_interfaces
+)
+
+# Link g2o libraries
+target_link_libraries(${PROJECT_NAME}_plugin
+  ${g2o_LIBRARIES}
+)
+
+
+# Install library
+install(TARGETS ${PROJECT_NAME}_plugin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# Install headers
+install(DIRECTORY include/
+  DESTINATION include
+)
+
+# Install Python scripts
+install(DIRECTORY scripts/
+  DESTINATION lib/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+)
+
+# Export plugin
+pluginlib_export_plugin_description_file(nav2_core intpc_local_planner_plugin.xml)
+
+# Install plugin description file
+install(FILES intpc_local_planner_plugin.xml
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# Test
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()
