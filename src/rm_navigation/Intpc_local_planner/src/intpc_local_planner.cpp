@@ -44,12 +44,14 @@ namespace intpc_local_planner {
 IntpcLocalPlanner::IntpcLocalPlanner() {
   // 初始化参数
   wheel_base_ = 0.1;  // 默认轴距（机器人两个轮子之间的距离）
-  shape_ = 1;         // 默认路径形状（1表示直线路径，原始算法支持圆形、8字形等多种路径形状）
-  distance_ = 0.0;    // 默认距离（前瞻距离，用于计算局部目标点）
   vd_ = 0.5;          // 默认期望速度（机器人的目标线速度）
+  goal_x_ = 0.0;      // 默认目标x坐标
+  goal_y_ = 0.0;      // 默认目标y坐标
   
-  // 初始化路径参数
-  initializePathParams();
+  // 控制器参数
+  alpha_ = 0.1;       // CBF参数
+  l_ = 0.1;           // 机器人参数
+  d_ = 0.05;          // 机器人参数
 }
 
 IntpcLocalPlanner::~IntpcLocalPlanner() {
@@ -60,20 +62,10 @@ IntpcLocalPlanner::~IntpcLocalPlanner() {
  * @brief 初始化路径参数
  * @param goal_x 目标点x坐标
  * @param goal_y 目标点y坐标
- * @param shape 路径形状类型（1表示直线）
- * @param lookahead 前瞻距离
  */
-void IntpcLocalPlanner::initializePathParams(double goal_x, double goal_y, int shape, double lookahead) {
-  path_shape_ = shape;     // 存储路径形状类型
+void IntpcLocalPlanner::initializePathParams(double goal_x, double goal_y) {
   goal_x_ = goal_x;        // 存储目标点x坐标
   goal_y_ = goal_y;        // 存储目标点y坐标
-  
-  // 简化路径参数设置，使用直线路径
-  x_c_ = goal_x;           // 路径中心点x坐标（直线情况下与目标点相同）
-  y_c_ = goal_y;           // 路径中心点y坐标（直线情况下与目标点相同）
-  
-  // 设置前瞻距离（决定局部规划的范围）
-  distance_ = lookahead;
 }
 
 /**
@@ -81,16 +73,11 @@ void IntpcLocalPlanner::initializePathParams(double goal_x, double goal_y, int s
  * @param k 比例增益系数
  * @param x 机器人当前x坐标
  * @param y 机器人当前y坐标
- * @param px 路径x坐标点集
- * @param py 路径y坐标点集
  * @param vd 期望速度
- * @param distance 前瞻距离
- * @param shape 路径形状
  * @param e 输出：路径跟踪误差
  * @param vf 输出：参考速度向量（包含x和y方向速度分量）
  */
-void IntpcLocalPlanner::reference(double k, double x, double y, const Eigen::VectorXd& px, const Eigen::VectorXd& py,
-                                 double vd, double distance, int shape, double& e, Eigen::Vector2d& vf) {
+void IntpcLocalPlanner::reference(double k, double x, double y, double vd, double& e, Eigen::Vector2d& vf) {
   // 计算到目标的向量
   double dx = goal_x_ - x;            // x方向距离差
   double dy = goal_y_ - y;            // y方向距离差
@@ -109,12 +96,12 @@ void IntpcLocalPlanner::reference(double k, double x, double y, const Eigen::Vec
   // 计算法向向量（逆时针90度旋转切向向量）
   Eigen::Vector2d n(-tau(1), tau(0));  // 法向向量，用于路径纠偏
   
-  // 计算路径跟踪误差（简化为到目标的距离与前瞻距离之差）
-  e = dist_to_goal - distance;
+  // 计算路径跟踪误差（简化为到目标的距离）
+  e = dist_to_goal;
   
   // 计算参考速度：切向速度 + 比例控制的法向速度
   // 切向速度使机器人朝目标移动，法向速度用于路径纠偏
-  vf = tau * vd + k * e * n;
+  vf = tau * vd;
   
   // 归一化并设置速度大小
   double norm = vf.norm();
@@ -179,7 +166,7 @@ Eigen::Vector2d IntpcLocalPlanner::computeIntpcControl(
   // 计算参考速度（基于路径跟踪的理想速度）
   double e;
   Eigen::Vector2d ref_vel;
-  reference(k_gain, x, y, px1_, py1_, vd_, distance_, path_shape_, e, ref_vel);
+  reference(k_gain, x, y, vd_, e, ref_vel);
   
   // 初始控制速度为参考速度（无障碍物时使用）
   Eigen::Vector2d control_vel = ref_vel;

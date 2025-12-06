@@ -143,10 +143,9 @@ protected:
   /**
     * @brief Extract the local goal from the transformed plan
     * @param transformed_plan The transformed plan
-    * @param lookahead_dist The lookahead distance
     * @return The local goal pose
     */
-  geometry_msgs::msg::PoseStamped getLocalGoal(const nav_msgs::msg::Path &transformed_plan, double lookahead_dist);
+  geometry_msgs::msg::PoseStamped getLocalGoal(const nav_msgs::msg::Path &transformed_plan);
   
   /**
     * @brief Saturate the velocity commands to be within the robot's capabilities
@@ -187,14 +186,12 @@ protected:
   double max_vel_theta_;
   double acc_lim_x_;
   double acc_lim_theta_;
-  double lookahead_dist_;
   
   // Intpc core planner
   std::unique_ptr<IntpcLocalPlanner> planner_;
   
   // Intpc specific parameters
   double k_gain_;         // Gain for path following
-  int path_shape_;        // Path shape type (1-4)
   double obstacle_radius_; // Radius of obstacles
   double robot_radius_;   // Radius of the robot
   

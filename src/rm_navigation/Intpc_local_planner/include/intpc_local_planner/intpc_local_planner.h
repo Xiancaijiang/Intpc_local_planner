@@ -64,16 +64,11 @@ public:
    * @param k 比例增益
    * @param x 当前x坐标
    * @param y 当前y坐标
-   * @param px 路径x坐标参数
-   * @param py 路径y坐标参数
    * @param vd 期望速度
-   * @param distance 路径距离
-   * @param shape 路径形状类型
    * @param e 输出参数：距离误差
    * @param vf 输出参数：参考速度向量
    */
-  void reference(double k, double x, double y, const Eigen::VectorXd& px, const Eigen::VectorXd& py,
-                 double vd, double distance, int shape, double& e, Eigen::Vector2d& vf);
+  void reference(double k, double x, double y, double vd, double& e, Eigen::Vector2d& vf);
 
   /**
    * @brief 求解QP优化问题，生成考虑障碍物的控制速度
@@ -114,10 +109,8 @@ public:
    * @brief Initialize path parameters
    * @param goal_x Goal x position
    * @param goal_y Goal y position
-   * @param path_shape Shape of the reference path (1-4)
-   * @param lookahead Lookahead distance
    */
-  void initializePathParams(double goal_x, double goal_y, int path_shape, double lookahead);
+  void initializePathParams(double goal_x, double goal_y);
 
   /**
    * @brief 主要的控制计算接口，整合所有算法
@@ -140,7 +133,6 @@ public:
 private:
   // 机器人参数
   double wheel_base_;  // 轴距
-  double shape_;       // 当前路径形状
   
   // 控制器参数
   double alpha_;       // CBF参数
@@ -148,21 +140,9 @@ private:
   double d_;           // 机器人参数
   
   // 路径参数
-  double distance_;    // 路径距离参数
   double vd_;          // 期望速度
-  
-  // 傅里叶基函数参数
-  int harmonic_;       // 谐波数量
-  
-  // 路径参数（预定义路径的参数）
-  Eigen::VectorXd px1_, py1_;  // 路径参数1
-  Eigen::VectorXd px2_, py2_;  // 路径参数2
-  Eigen::VectorXd px3_, py3_;  // 路径参数3
-  
-  /**
-   * @brief 初始化路径参数
-   */
-  void initializePathParams();
+  double goal_x_;      // 目标x坐标
+  double goal_y_;      // 目标y坐标
 };
 
 }  // namespace intpc_local_planner

@@ -57,14 +57,12 @@ IntpcLocalPlannerROS::IntpcLocalPlannerROS()
   max_vel_theta_ = 1.0;
   acc_lim_x_ = 2.5;
   acc_lim_theta_ = 3.2;
-  lookahead_dist_ = 0.3;
   
   // Initialize Intpc planner core
   planner_ = std::make_unique<IntpcLocalPlanner>();
   
   // Intpc specific parameters
   k_gain_ = 1.0;
-  path_shape_ = 1; // 使用简化的路径
   obstacle_radius_ = 0.1; // 默认障碍物半径
 }
 
@@ -105,7 +103,6 @@ void IntpcLocalPlannerROS::configure(
   
   // Intpc specific parameters
   nav2_util::declare_parameter_if_not_declared(node, name_ + ".k_gain", rclcpp::ParameterValue(1.0));
-  nav2_util::declare_parameter_if_not_declared(node, name_ + ".path_shape", rclcpp::ParameterValue(1));
   nav2_util::declare_parameter_if_not_declared(node, name_ + ".obstacle_radius", rclcpp::ParameterValue(0.25));
   
   node->get_parameter(name_ + ".max_vel_x", max_vel_x_);
@@ -113,15 +110,13 @@ void IntpcLocalPlannerROS::configure(
   node->get_parameter(name_ + ".max_vel_theta", max_vel_theta_);
   node->get_parameter(name_ + ".acc_lim_x", acc_lim_x_);
   node->get_parameter(name_ + ".acc_lim_theta", acc_lim_theta_);
-  node->get_parameter(name_ + ".lookahead_dist", lookahead_dist_);
   
   // Get Intpc specific parameters
   node->get_parameter(name_ + ".k_gain", k_gain_);
-  node->get_parameter(name_ + ".path_shape", path_shape_);
   node->get_parameter(name_ + ".obstacle_radius", obstacle_radius_);
   
-  RCLCPP_INFO(logger_, "Intpc parameters: k_gain=%.2f, path_shape=%d, obstacle_radius=%.2f", 
-              k_gain_, path_shape_, obstacle_radius_);
+  RCLCPP_INFO(logger_, "Intpc parameters: k_gain=%.2f, obstacle_radius=%.2f", 
+              k_gain_, obstacle_radius_);
   
   // Set up visualization publisher
   marker_pub_ = node->create_publisher<visualization_msgs::msg::MarkerArray>(name_ + "/markers", 1);
@@ -191,7 +186,7 @@ geometry_msgs::msg::TwistStamped IntpcLocalPlannerROS::computeVelocityCommands(
   }
   
   // Get the local goal from the transformed plan
-  geometry_msgs::msg::PoseStamped local_goal = getLocalGoal(transformed_plan, lookahead_dist_);
+  geometry_msgs::msg::PoseStamped local_goal = getLocalGoal(transformed_plan);
   
   // Calculate the vector from the robot to the local goal
   double dx = local_goal.pose.position.x - pose.pose.position.x;
@@ -237,7 +232,7 @@ geometry_msgs::msg::TwistStamped IntpcLocalPlannerROS::computeVelocityCommands(
                x_obstacles.size(), obstacle_nearby ? "true" : "false");
   
   // Initialize the path parameters in the Intpc planner
-  planner_->initializePathParams(local_goal.pose.position.x, local_goal.pose.position.y, path_shape_, lookahead_dist_);
+  planner_->initializePathParams(local_goal.pose.position.x, local_goal.pose.position.y);
   
   // Calculate robot state
   double robot_x = pose.pose.position.x;
@@ -372,11 +367,14 @@ nav_msgs::msg::Path IntpcLocalPlannerROS::transformGlobalPlan(const nav_msgs::ms
   return transformed_plan;
 }
 
-geometry_msgs::msg::PoseStamped IntpcLocalPlannerROS::getLocalGoal(const nav_msgs::msg::Path &transformed_plan, double lookahead_dist)
+geometry_msgs::msg::PoseStamped IntpcLocalPlannerROS::getLocalGoal(const nav_msgs::msg::Path &transformed_plan)
 {
   if (transformed_plan.poses.empty()) {
     throw std::runtime_error("Empty plan provided to getLocalGoal");
   }
+  
+  // 默认前瞻距离
+  double lookahead_dist = 0.5; // 50cm前瞻距离
   
   // Find the first pose that is at least lookahead_dist away from the robot
   // For this, we need to find the point closest to the robot in the transformed plan first
