@@ -43,7 +43,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <nav2_util/node_utils.hpp>
-#include <nav2_costmap_2d/costmap_2d.h>
+#include <nav2_costmap_2d/costmap_2d.hpp>
 #include <nav2_costmap_2d/cost_values.hpp>
 
 namespace intpc_local_planner
@@ -77,8 +77,6 @@ void IntpcLocalPlannerROS::configure(
   std::shared_ptr<tf2_ros::Buffer> tf,
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros)
 {
-  RCLCPP_INFO(logger_, "Configuring IntpcLocalPlannerROS");
-  
   // Initialize node and parameters
   auto node = parent.lock();
   if (!node) {
@@ -86,6 +84,7 @@ void IntpcLocalPlannerROS::configure(
   }
   
   logger_ = node->get_logger();
+  RCLCPP_INFO(logger_, "Configuring IntpcLocalPlannerROS");
   clock_ = node->get_clock();
   name_ = name;
   
@@ -110,6 +109,7 @@ void IntpcLocalPlannerROS::configure(
   node->get_parameter(name_ + ".max_vel_theta", max_vel_theta_);
   node->get_parameter(name_ + ".acc_lim_x", acc_lim_x_);
   node->get_parameter(name_ + ".acc_lim_theta", acc_lim_theta_);
+  node->get_parameter(name_ + ".lookahead_dist", lookahead_dist_);
   
   // Get Intpc specific parameters
   node->get_parameter(name_ + ".k_gain", k_gain_);
@@ -194,7 +194,7 @@ geometry_msgs::msg::TwistStamped IntpcLocalPlannerROS::computeVelocityCommands(
   double distance = std::hypot(dx, dy);
   
   // Check if we've reached the goal
-  if (distance < 0.1 || (goal_checker && goal_checker->isGoalReached(pose.pose, velocity))) {
+  if (distance < 0.1 || (goal_checker && goal_checker->isGoalReached(pose.pose, pose.pose, velocity))) {
     RCLCPP_INFO(logger_, "Goal reached, distance: %f", distance);
     geometry_msgs::msg::TwistStamped cmd_vel;
     cmd_vel.header.stamp = clock_->now();
@@ -474,8 +474,8 @@ void IntpcLocalPlannerROS::extractObstaclesFromCostmap(
   
   // 搜索半径（地图单元格）
   int search_radius = static_cast<int>(lookahead_dist_ * costmap->getResolution());
-  search_radius = std::min(search_radius, std::min(map_x, static_cast<unsigned int>(costmap->getSizeInCellsX() - map_x)));
-  search_radius = std::min(search_radius, std::min(map_y, static_cast<unsigned int>(costmap->getSizeInCellsY() - map_y)));
+  search_radius = std::min(search_radius, std::min(static_cast<int>(map_x), static_cast<int>(costmap->getSizeInCellsX() - map_x)));
+  search_radius = std::min(search_radius, std::min(static_cast<int>(map_y), static_cast<int>(costmap->getSizeInCellsY() - map_y)));
   
   // 记录已访问的障碍物单元格，避免重复
   std::vector<std::vector<bool>> visited(costmap->getSizeInCellsX(), 
