@@ -186,6 +186,7 @@ protected:
   double max_vel_theta_;
   double acc_lim_x_;
   double acc_lim_theta_;
+  double lookahead_dist_;
   
   // Intpc core planner
   std::unique_ptr<IntpcLocalPlanner> planner_;

@@ -14,7 +14,6 @@
 
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
-  <system_depend>libg2o</system_depend>
   <depend>dwb_critics</depend>
   <depend>nav2_core</depend>
   <depend>nav2_costmap_2d</depend>
