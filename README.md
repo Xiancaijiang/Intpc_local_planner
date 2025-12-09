@@ -21,9 +21,15 @@
 
 ### 安装步骤
 
-1. **克隆仓库**
+1. **克隆仓库（包含子模块）**
     ```sh
+    # 方法1：直接克隆时包含子模块（推荐）
     git clone --recursive https://github.com/Xiancaijiang/Intpc_local_planner.git
+
+    # 方法2：先克隆主仓库，然后初始化子模块
+    git clone https://github.com/Xiancaijiang/Intpc_local_planner.git
+    cd Intpc_local_planner
+    git submodule update --init --recursive
     ```
 
 2. **安装Livox SDK2**（用于LiDAR支持）
