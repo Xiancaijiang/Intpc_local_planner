@@ -236,8 +236,7 @@ ros2 launch rm_nav_bringup bringup_sim.launch.py planner_type:=<your_planner_nam
 - LiDAR点云仿真参考：`livox_laser_simulation`、`livox_laser_simulation_RO2`
 
 ### 代码基础
-- 基于 [中南大学 FYT 战队 RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry) 开发
-- 参考 [深圳北理莫斯科大学 北极熊战队 导航系统](https://github.com/LihanChen2004/PB_RMSimulation.git)
+- 基于[深圳北理莫斯科大学 北极熊战队 导航系统](https://github.com/LihanChen2004/PB_RMSimulation.git)、[中南大学 FYT 战队 RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry) 开发
 
 ### 开源依赖
 - [Navigation2](https://navigation.ros.org/)
