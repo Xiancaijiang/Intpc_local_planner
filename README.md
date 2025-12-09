@@ -21,9 +21,15 @@
 
 ### 安装步骤
 
-1. **克隆仓库**
+1. **克隆仓库（包含子模块）**
     ```sh
+    # 方法1：直接克隆时包含子模块（推荐）
     git clone --recursive https://github.com/Xiancaijiang/Intpc_local_planner.git
+
+    # 方法2：先克隆主仓库，然后初始化子模块
+    git clone https://github.com/Xiancaijiang/Intpc_local_planner.git
+    cd Intpc_local_planner
+    git submodule update --init --recursive
     ```
 
 2. **安装Livox SDK2**（用于LiDAR支持）
@@ -236,8 +242,7 @@ ros2 launch rm_nav_bringup bringup_sim.launch.py planner_type:=<your_planner_nam
 - LiDAR点云仿真参考：`livox_laser_simulation`、`livox_laser_simulation_RO2`
 
 ### 代码基础
-- 基于 [中南大学 FYT 战队 RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry) 开发
-- 参考 [深圳北理莫斯科大学 北极熊战队 导航系统](https://github.com/LihanChen2004/PB_RMSimulation.git)
+- 基于[深圳北理莫斯科大学 北极熊战队 导航系统](https://github.com/LihanChen2004/PB_RMSimulation.git)、[中南大学 FYT 战队 RM 哨兵上位机算法](https://github.com/baiyeweiguang/CSU-RM-Sentry) 开发
 
 ### 开源依赖
 - [Navigation2](https://navigation.ros.org/)
