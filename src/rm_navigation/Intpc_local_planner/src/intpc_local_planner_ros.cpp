@@ -474,8 +474,10 @@ void IntpcLocalPlannerROS::extractObstaclesFromCostmap(
   
   // 搜索半径（地图单元格）
   int search_radius = static_cast<int>(lookahead_dist_ * costmap->getResolution());
-  search_radius = std::min(search_radius, std::min(static_cast<int>(map_x), static_cast<int>(costmap->getSizeInCellsX() - map_x)));
-  search_radius = std::min(search_radius, std::min(static_cast<int>(map_y), static_cast<int>(costmap->getSizeInCellsY() - map_y)));
+  int max_search_x = std::min(static_cast<int>(map_x), static_cast<int>(costmap->getSizeInCellsX()) - static_cast<int>(map_x));
+  int max_search_y = std::min(static_cast<int>(map_y), static_cast<int>(costmap->getSizeInCellsY()) - static_cast<int>(map_y));
+  search_radius = std::min(search_radius, max_search_x);
+  search_radius = std::min(search_radius, max_search_y);
   
   // 记录已访问的障碍物单元格，避免重复
   std::vector<std::vector<bool>> visited(costmap->getSizeInCellsX(), 
