@@ -139,6 +139,25 @@ void IntpcLocalPlannerROS::cleanup()
   RCLCPP_INFO(logger_, "Cleaning up IntpcLocalPlannerROS");
 }
 
+void IntpcLocalPlannerROS::setSpeedLimit(const double & speed_limit, const bool & percentage)
+{
+  // Implement speed limit functionality
+  if (percentage) {
+    // Speed limit is a percentage of the maximum velocity
+    max_vel_x_ *= (speed_limit / 100.0);
+    max_vel_theta_ *= (speed_limit / 100.0);
+  } else {
+    // Speed limit is an absolute value
+    max_vel_x_ = speed_limit;
+    // For angular velocity, we might want to maintain a ratio or set directly
+    // Here we'll set it directly for simplicity
+    max_vel_theta_ = speed_limit * 1.5; // Maintain some ratio for angular velocity
+  }
+  
+  RCLCPP_DEBUG(logger_, "Set speed limit: linear=%.2f, angular=%.2f (percentage=%s)",
+               max_vel_x_, max_vel_theta_, percentage ? "true" : "false");
+}
+
 void IntpcLocalPlannerROS::setPlan(const nav_msgs::msg::Path & orig_global_plan)
 {
   RCLCPP_DEBUG(logger_, "Setting new plan with %zu points", orig_global_plan.poses.size());
@@ -148,7 +167,7 @@ void IntpcLocalPlannerROS::setPlan(const nav_msgs::msg::Path & orig_global_plan)
 geometry_msgs::msg::TwistStamped IntpcLocalPlannerROS::computeVelocityCommands(
   const geometry_msgs::msg::PoseStamped &pose,
   const geometry_msgs::msg::Twist &velocity,
-  nav2_core::GoalChecker * goal_checker)
+  nav2_core::GoalChecker * goal_checker) override
 {
   // Store current pose and velocity
   current_pose_ = pose;

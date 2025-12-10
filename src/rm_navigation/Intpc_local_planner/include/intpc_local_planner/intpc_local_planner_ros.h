@@ -126,7 +126,14 @@ public:
   geometry_msgs::msg::TwistStamped computeVelocityCommands(
     const geometry_msgs::msg::PoseStamped &pose,
     const geometry_msgs::msg::Twist &velocity,
-    nav2_core::GoalChecker * goal_checker);
+    nav2_core::GoalChecker * goal_checker) override;
+
+  /**
+    * @brief Set a speed limit for the planner
+    * @param speed_limit New speed limit
+    * @param percentage Whether the speed limit is a percentage or absolute value
+    */
+  void setSpeedLimit(const double & speed_limit, const bool & percentage) override;
   
 protected:
   /**
@@ -167,7 +174,7 @@ protected:
     std::vector<double> &obstacle_radii);
   
   // ROS node and parameters
-  rclcpp::Logger logger_;
+  rclcpp::Logger logger_{rclcpp::get_logger("IntpcLocalPlanner")}; // 默认初始化，在configure中会重新赋值
   rclcpp::Clock::SharedPtr clock_;
   std::string name_;
   
