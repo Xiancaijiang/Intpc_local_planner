@@ -167,7 +167,7 @@ void IntpcLocalPlannerROS::setPlan(const nav_msgs::msg::Path & orig_global_plan)
 geometry_msgs::msg::TwistStamped IntpcLocalPlannerROS::computeVelocityCommands(
   const geometry_msgs::msg::PoseStamped &pose,
   const geometry_msgs::msg::Twist &velocity,
-  nav2_core::GoalChecker * goal_checker) override
+  nav2_core::GoalChecker * goal_checker)
 {
   // Store current pose and velocity
   current_pose_ = pose;
