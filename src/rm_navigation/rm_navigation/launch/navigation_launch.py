@@ -63,13 +63,8 @@ def generate_launch_description():
         'use_sim_time': use_sim_time,
         'autostart': autostart}
 
-    # 动态选择参数文件路径，根据planner_type参数
-    # 如果params_file未指定，则根据planner_type选择默认配置
-    final_params_file = PythonExpression([
-        "params_file" if params_file else "'" + 
-        os.path.join(bringup_dir, 'params', 'nav2_params_') + 
-        "' + ('teb' if planner_type == 'teb' else 'intpc') + '.yaml'" 
-    ])
+    # 直接使用params_file，由上层调用者根据planner_type选择合适的参数文件
+    final_params_file = params_file
     
     configured_params = RewrittenYaml(
             source_file=final_params_file,

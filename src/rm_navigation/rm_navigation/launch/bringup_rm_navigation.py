@@ -34,13 +34,16 @@ def generate_launch_description():
     remappings = [('/tf', 'tf'),
                   ('/tf_static', 'tf_static')]
 
+    # 使用默认的params_file，由上层调用者根据需要选择合适的参数文件
+    final_params_file = params_file
+    
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {
         'use_sim_time': use_sim_time,
         'yaml_filename': map_yaml_file}
 
     configured_params = RewrittenYaml(
-        source_file=params_file,
+        source_file=final_params_file,
         root_key=namespace,
         param_rewrites=param_substitutions,
         convert_types=True)
@@ -99,11 +102,6 @@ def generate_launch_description():
         'nav_rviz',
         default_value='True',
         description='Visualize navigation2 if true')
-        
-    declare_planner_type_cmd = DeclareLaunchArgument(
-        'planner_type',
-        default_value='teb',
-        description='Planner type to use: teb or intpc')
 
     # Specify the actions
     bringup_cmd_group = GroupAction([
@@ -156,7 +154,6 @@ def generate_launch_description():
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     ld.add_action(declare_nav_rviz_cmd)
-    ld.add_action(declare_planner_type_cmd)
 
     # Add the actions to launch all of the navigation nodes
     ld.add_action(bringup_cmd_group)
