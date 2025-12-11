@@ -267,11 +267,11 @@ geometry_msgs::msg::TwistStamped IntpcLocalPlannerROS::computeVelocityCommands(
     RCLCPP_DEBUG(logger_, "Obstacle detected nearby, reducing speed factor to %.2f", speed_factor);
   }
   
-  // Adjust lookahead distance based on obstacle presence
-  double adjusted_lookahead_dist = lookahead_dist_;
-  if (obstacle_nearby) {
-    adjusted_lookahead_dist = lookahead_dist_ * 0.7; // Reduce lookahead distance when obstacles are nearby
-  }
+  // // Adjust lookahead distance based on obstacle presence
+  // double adjusted_lookahead_dist = lookahead_dist_;
+  // if (obstacle_nearby) {
+  //   adjusted_lookahead_dist = lookahead_dist_ * 0.7; // Reduce lookahead distance when obstacles are nearby
+  // }
   
   // Compute Intpc control velocity with adjusted parameters
   Eigen::Vector2d control_velocity = planner_->computeIntpcControl(
