@@ -53,8 +53,23 @@ def generate_launch_description():
 
     ################################### navigation2 parameters start ##################################
     nav2_map_dir = PathJoinSubstitution([rm_nav_bringup_dir, 'map', world, '.yaml'])
-    nav2_params_file_dir = os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'nav2_params_sim.yaml')
+    default_nav2_params_file_dir = os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'nav2_params_sim.yaml')
+    intpc_nav2_params_file_dir = os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'nav2_params_intpc.yaml')
     ################################### navigation2 parameters end ####################################
+
+    # 根据planner_type选择参数文件
+    from launch.substitutions import PythonExpression, TextSubstitution
+    params_file = LaunchConfiguration('params_file')
+    
+    # 声明params_file参数，根据planner_type设置默认值
+    declare_params_file_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=PythonExpression([
+            "'" + intpc_nav2_params_file_dir + "'" + 
+            ' if "', planner_type, '" == "intpc" else "', default_nav2_params_file_dir, '"'
+        ]),
+        description='Full path to the ROS2 parameters file to use for all launched nodes'
+    )
 
     ################################ icp_registration parameters start ################################
     icp_pcd_dir = PathJoinSubstitution([rm_nav_bringup_dir, 'PCD', world, '.pcd'])
@@ -105,6 +120,11 @@ def generate_launch_description():
         'planner_type',
         default_value='teb',
         description='Choose local planner: teb or intpc')
+
+    declare_params_file_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=default_nav2_params_file_dir,
+        description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     # Specify the actions
     start_rm_simulation = IncludeLaunchDescription(
@@ -186,7 +206,7 @@ def generate_launch_description():
                 executable='fastlio_mapping',
                 parameters=[
                     fastlio_mid360_params,
-                    {use_sim_time: use_sim_time}
+                    {'use_sim_time': use_sim_time}
                 ],
                 output='screen'
             ),
@@ -249,9 +269,9 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(os.path.join(navigation2_launch_dir,'localization_amcl_launch.py')),
                 condition = LaunchConfigurationEquals('localization', 'amcl'),
-                launch_arguments = {
+                launch_arguments={
                     'use_sim_time': use_sim_time,
-                    'params_file': nav2_params_file_dir}.items()
+                    'params_file': params_file}.items()
             ),
 
             TimerAction(
@@ -278,7 +298,7 @@ def generate_launch_description():
                 launch_arguments={
                     'use_sim_time': use_sim_time,
                     'map': nav2_map_dir,
-                    'params_file': nav2_params_file_dir,
+                    'params_file': params_file,
                     'container_name': 'nav2_container'}.items())
         ]
     )
@@ -309,7 +329,7 @@ def generate_launch_description():
         launch_arguments={
             'use_sim_time': use_sim_time,
             'map': nav2_map_dir,
-            'params_file': nav2_params_file_dir,
+            'params_file': params_file,
             'nav_rviz': use_nav_rviz,
             'planner_type': planner_type}.items()
     )
@@ -325,6 +345,7 @@ def generate_launch_description():
     ld.add_action(declare_localization_cmd)
     ld.add_action(declare_LIO_cmd)
     ld.add_action(declare_planner_type_cmd)
+    ld.add_action(declare_params_file_cmd)
 
     ld.add_action(start_rm_simulation)
     ld.add_action(bringup_imu_complementary_filter_node)
