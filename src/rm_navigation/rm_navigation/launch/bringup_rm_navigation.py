@@ -12,7 +12,6 @@ from launch_ros.actions import Node
 from launch_ros.actions import PushRosNamespace
 from nav2_common.launch import RewrittenYaml
 
-
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('rm_navigation')
@@ -68,7 +67,7 @@ def generate_launch_description():
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
-        default_value= os.path.join(bringup_dir,'map', 'RMUL.yaml'),
+        default_value=os.path.join(bringup_dir, 'map', 'RMUL.yaml'),
         description='Full path to map yaml file to load')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
@@ -80,7 +79,6 @@ def generate_launch_description():
         'params_file',
         default_value=os.path.join(bringup_dir, 'params', 'nav2_params.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
-
 
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='True',

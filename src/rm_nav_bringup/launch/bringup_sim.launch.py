@@ -52,12 +52,12 @@ def generate_launch_description():
     ################################### slam_toolbox parameters end ###################################
 
     ################################### navigation2 parameters start ##################################
-    nav2_map_dir = PathJoinSubstitution([rm_nav_bringup_dir, 'map', world]), ".yaml"
+    nav2_map_dir = PathJoinSubstitution([rm_nav_bringup_dir, 'map', world, '.yaml'])
     nav2_params_file_dir = os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'nav2_params_sim.yaml')
     ################################### navigation2 parameters end ####################################
 
     ################################ icp_registration parameters start ################################
-    icp_pcd_dir = PathJoinSubstitution([rm_nav_bringup_dir, 'PCD', world]), ".pcd"
+    icp_pcd_dir = PathJoinSubstitution([rm_nav_bringup_dir, 'PCD', world, '.pcd'])
     icp_registration_params_dir = os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'icp_registration_sim.yaml')
     ################################# icp_registration parameters end #################################
 

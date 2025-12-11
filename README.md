@@ -72,7 +72,9 @@
 - **icp**：基于点云配准的定位，仅初始定位时使用，长时间运行可能有累积误差
 
 ### 3.2 仿真模式示例
-
+    ```sh
+    source install/setup.bash
+    ```
 #### 边建图边导航
 ```sh
 ros2 launch rm_nav_bringup bringup_sim.launch.py \
