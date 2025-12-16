@@ -11,9 +11,10 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Comm
 from launch.conditions import LaunchConfigurationEquals, LaunchConfigurationNotEquals, IfCondition
 
 def generate_launch_description():
-      # 首先尝试从当前脚本所在目录向上查找源代码目录
-      current_script_dir = os.path.dirname(os.path.abspath(__file__))
-      src_rm_nav_bringup_dir = os.path.abspath(os.path.join(current_script_dir, '..', '..', '..', 'rm_nav_bringup'))
+      # 首先尝试从源代码目录获取（基于常见的工作区结构）
+      home_dir = os.path.expanduser('~')
+      workspace_dir = os.path.join(home_dir, 'Intpc_local_planner')
+      src_rm_nav_bringup_dir = os.path.join(workspace_dir, 'src', 'rm_nav_bringup')
 
       # 调试信息
       print(f"Debug: Home directory = {home_dir}")
@@ -121,12 +122,8 @@ def generate_launch_description():
       ################################### navigation2 parameters end ####################################
 
       # 定义参数文件路径
-      intpc_params_file_candidate = os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'nav2_params_intpc.yaml')
+      intpc_params_file = os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'nav2_params_intpc.yaml')
       default_params_file = os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'nav2_params_sim.yaml')
-      
-      # 如果nav2_params_intpc.yaml不存在，回退到使用nav2_params_sim.yaml
-      intpc_params_file = intpc_params_file_candidate if os.path.exists(intpc_params_file_candidate) else default_params_file
-      print(f"Debug: Using intpc params file = {intpc_params_file}")
 
       ################################ icp_registration parameters start ################################
       icp_pcd_dir = PathJoinSubstitution([rm_nav_bringup_dir, 'PCD', world, '.pcd'])
@@ -175,7 +172,7 @@ def generate_launch_description():
           
       declare_planner_type_cmd = DeclareLaunchArgument(
           'planner_type',
-          default_value='teb',
+          default_value='intpc',
           description='Choose local planner: teb or intpc')
 
 
@@ -303,9 +300,9 @@ def generate_launch_description():
                   )
               ])
       ])
-
+      
         # 创建两个不同的定位启动配置，根据planner_type选择不同的参数文件
-        start_localization_group_intpc = GroupAction(
+      start_localization_group_intpc = GroupAction(
             condition = IfCondition(
                 PythonExpression(['"', LaunchConfiguration('mode'), '" == "nav" and "', LaunchConfiguration('planner_type'), '" == "intpc"'])
             ),
@@ -360,7 +357,7 @@ def generate_launch_description():
             ]
         )
         
-        start_localization_group_teb = GroupAction(
+      start_localization_group_teb = GroupAction(
             condition = IfCondition(
                 PythonExpression(['"', LaunchConfiguration('mode'), '" == "nav" and "', LaunchConfiguration('planner_type'), '" == "teb"'])
             ),
@@ -415,7 +412,7 @@ def generate_launch_description():
             ]
         )
 
-        bringup_fake_vel_transform_node = Node(
+      bringup_fake_vel_transform_node = Node(
             package='fake_vel_transform',
             executable='fake_vel_transform_node',
             output='screen',
@@ -425,7 +422,7 @@ def generate_launch_description():
             }]
         )
 
-        start_mapping = Node(
+      start_mapping = Node(
             condition = LaunchConfigurationEquals('mode', 'mapping'),
             package='slam_toolbox',
             executable='async_slam_toolbox_node',
@@ -437,18 +434,18 @@ def generate_launch_description():
         )
 
         # 创建两个不同的导航启动配置，根据planner_type选择不同的参数文件
-        start_navigation2_intpc = IncludeLaunchDescription(
+      start_navigation2_intpc = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(navigation2_launch_dir, 'bringup_rm_navigation.py')),
             condition=LaunchConfigurationEquals('planner_type', 'intpc'),
             launch_arguments={
                 'use_sim_time': use_sim_time,
                 'map': nav2_map_dir,
-                'params_file': intpc_params_file,
+                'params_file': os.path.join(rm_nav_bringup_dir, 'config', 'simulation', 'nav2_params_intpc.yaml'),
                 'nav_rviz': use_nav_rviz,
                 'planner_type': 'intpc'}.items()
         )
         
-        start_navigation2_teb = IncludeLaunchDescription(
+      start_navigation2_teb = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(navigation2_launch_dir, 'bringup_rm_navigation.py')),
             condition=LaunchConfigurationEquals('planner_type', 'teb'),
             launch_arguments={
@@ -459,29 +456,28 @@ def generate_launch_description():
                 'planner_type': 'teb'}.items()
         )
 
-        ld = LaunchDescription()
+      ld = LaunchDescription()
 
-        # Declare the launch options
-        ld.add_action(declare_use_sim_time_cmd)
-        ld.add_action(declare_use_lio_rviz_cmd)
-        ld.add_action(declare_nav_rviz_cmd)
-        ld.add_action(declare_world_cmd)
-        ld.add_action(declare_mode_cmd)
-        ld.add_action(declare_localization_cmd)
-        ld.add_action(declare_LIO_cmd)
-        ld.add_action(declare_planner_type_cmd)
+      # Declare the launch options
+      ld.add_action(declare_use_sim_time_cmd)
+      ld.add_action(declare_use_lio_rviz_cmd)
+      ld.add_action(declare_nav_rviz_cmd)
+      ld.add_action(declare_world_cmd)
+      ld.add_action(declare_mode_cmd)
+      ld.add_action(declare_localization_cmd)
+      ld.add_action(declare_LIO_cmd)        
+      ld.add_action(declare_planner_type_cmd)
 
-        ld.add_action(start_rm_simulation)
-        ld.add_action(bringup_imu_complementary_filter_node)
-        ld.add_action(bringup_linefit_ground_segmentation_node)
-        ld.add_action(bringup_pointcloud_to_laserscan_node)
-        ld.add_action(bringup_LIO_group)
-        ld.add_action(start_localization_group_intpc)
-        ld.add_action(start_localization_group_teb)
-        ld.add_action(bringup_fake_vel_transform_node)
-        ld.add_action(start_mapping)
-        ld.add_action(start_navigation2_intpc)
-        ld.add_action(start_navigation2_teb)
+      ld.add_action(start_rm_simulation)
+      ld.add_action(bringup_imu_complementary_filter_node)
+      ld.add_action(bringup_linefit_ground_segmentation_node)
+      ld.add_action(bringup_pointcloud_to_laserscan_node)
+      ld.add_action(bringup_LIO_group)
+      ld.add_action(start_localization_group_intpc)
+      ld.add_action(start_localization_group_teb)
+      ld.add_action(bringup_fake_vel_transform_node)
+      ld.add_action(start_mapping)
+      ld.add_action(start_navigation2_intpc)
+      ld.add_action(start_navigation2_teb)
 
-        return ld
-
+      return ld
