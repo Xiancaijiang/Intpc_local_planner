@@ -24,7 +24,7 @@
 1. **克隆仓库（包含子模块）**
     ```sh
     # 方法1：直接克隆时包含子模块（推荐）
-    git clone --recursive https://github.com/Xiancaijiang/Intpc_local_planner.git
+c
 
     # 方法2：先克隆主仓库，然后初始化子模块
     git clone https://github.com/Xiancaijiang/Intpc_local_planner.git
@@ -72,7 +72,9 @@
 - **icp**：基于点云配准的定位，仅初始定位时使用，长时间运行可能有累积误差
 
 ### 3.2 仿真模式示例
-
+    ```sh
+    source install/setup.bash
+    ```
 #### 边建图边导航
 ```sh
 ros2 launch rm_nav_bringup bringup_sim.launch.py \
