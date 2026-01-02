@@ -81,7 +81,7 @@ ros2 launch rm_nav_bringup bringup_sim.launch.py \
 world:=RMUL \
 mode:=mapping \
 lio:=fastlio \
-planner_type:=teb \
+planner_type:=intpc \
 lio_rviz:=False \
 nav_rviz:=True
 ```
@@ -93,7 +93,7 @@ world:=RMUL \
 mode:=nav \
 lio:=fastlio \
 localization:=slam_toolbox \
-planner_type:=teb \
+planner_type:=intpc \
 lio_rviz:=False \
 nav_rviz:=True
 ```
